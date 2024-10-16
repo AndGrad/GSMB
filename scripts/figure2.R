@@ -12,7 +12,7 @@ source("scripts/functions/check_pkgs.R") # when rendering
 #### upper panel
 
 ## data is prepared in scripts/prep_data.R
-all_data <- read.csv(file = 'data/full_dataset_3waves_2023.csv') %>% 
+all_data <- read.csv(file = 'data_experiments/full_dataset_3waves_2023.csv') %>% 
   mutate(follow = ifelse(choice == social_info, 1, 0),
          social_info_factor = factor(social_info),
          age_scaled = scale(age, scale = FALSE)) ## center but not standardize
@@ -32,7 +32,7 @@ all_data_intervention <- all_data %>%
   dplyr::filter(treatment > 3)
 
 ## read dataset with donation in first wave
-data_donations <- read.csv("data/individual_donations_1stsession__3waves")
+data_donations <- read.csv("data_experiments/individual_donations_1stsession__3waves")
 
 ## save main dataset into new one for the plot
 all_data_lollipop <- all_data_treatment
