@@ -1,0 +1,552 @@
+---
+title: "Analyses experimental data"
+author: "Andrea Gradassi"
+format: html
+editor: source
+project:
+  execute-dir: project
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+
+## load packages 
+#source("scripts/functions/check_pkgs.R") # execute chunck
+source("../scripts/functions/check_pkgs.R") # when rendering
+
+## load theme plot
+#source(paste0(here(), "/scripts/plots/theme_plot_mkdwn.R"))
+
+## set knitting directory
+knitr::opts_knit$set(root.dir = here())
+```
+
+```{r data subsetting}
+
+## data is prepared in scripts/prep_data.R
+all_data <- read.csv(file = 'data_experiments//full_dataset_3waves_2023.csv') %>% 
+  mutate(follow = ifelse(choice == social_info, 1, 0),
+         social_info_factor = factor(social_info),
+         age_scaled = scale(age, scale = FALSE)) ## center but not standardize
+
+## subset experimental treatments
+all_data_treatment <- all_data %>% 
+  dplyr::filter(treatment != 2 & treatment != 4 & treatment != 5 ) %>% 
+  mutate(follow = ifelse(choice == social_info, 1, 0),
+         social_info_factor = factor(social_info))
+
+## control condition: social info == choice wave 1
+all_data_control <- all_data %>% 
+  dplyr::filter(treatment == 2)
+
+## part 2, only added in 2020 and 2022 waves
+all_data_intervention <- all_data %>% 
+  dplyr::filter(treatment > 3)
+
+
+data_donations <- read.csv("data_experiments/individual_donations_1stsession__3waves")
+
+```
+
+## Demographics
+
+```{r demographics overview, echo=FALSE, message=FALSE}
+
+# create dataset only with demographic variables
+data_demographics <- 
+  all_data %>% 
+  dplyr::select(IDself, 
+         gender,
+         age,
+         classNr) %>% 
+  distinct() %>%  
+  mutate(gender_dummy = ifelse(gender == "male", 1, 0))
+
+# make a table for overall sample stats
+table_dem_total <- data_demographics %>% 
+    summarise(min_age = min(age, na.rm = TRUE ),
+              max_age = max(age, na.rm = TRUE),
+              median_age = median(age, na.rm = TRUE),
+              perc_male = paste(round(sum(gender_dummy, na.rm = TRUE)/n()*100,2), "%"),
+              #range = c(min(age), max(age)),
+              n = n()
+              ) 
+
+# make a table
+table_dem <- data_demographics %>% 
+  group_by(classNr) %>% 
+    summarise(min_age = min(age, na.rm = TRUE ),
+              max_age = max(age, na.rm = TRUE),
+              median_age = median(age, na.rm = TRUE),
+              perc_male = paste(round(sum(gender_dummy, na.rm = TRUE)/n()*100,2), "%"),
+              #range = c(min(age), max(age)),
+              n_collected = n()
+              ) %>% 
+
+  ## add column of total classroom members, based on names provided from teachers
+  mutate(n_total = c(20, 31, 28, 17, 25, 19, 28, 29, 29, 23, 27, 23, 26, 31, 21, 28, 27, 26, 30, 48, 27, 27, 29),
+         perc_class = paste(round(((n_collected/n_total)*100),2), "%"))
+
+  library(flextable)
+
+  ## @andrea do this also for social network data; i.e. how many participants per class
+flextable_df <- flextable(table_dem)
+
+## apply APA style customization
+flextable_df <- flextable_df %>%
+  ## remove all borders
+  border_remove() %>%
+  ## add top border for the header and bottom border for the entire table
+  hline_top(part = "header", border = fp_border_default(width = 2)) %>%
+  hline_bottom(part = "body", border = fp_border_default(width = 1)) %>%
+  hline_bottom(part = "header", border = fp_border_default(width = 1)) %>%
+  ## align text to the left
+  align(align = "left", part = "all") %>%
+  ## set text size (optional)
+  fontsize(size = 9, part = "all") %>% 
+  autofit()
+
+## export as word
+save_as_docx(flextable_df, path =  "tables/demographics.docx")
+
+## make a plot of the age and gender in the sample
+all_data %>%
+  select(IDself, age) %>%
+  filter(age < 20) %>%
+  distinct() %>%
+  ggplot(aes(x = factor(age))) +
+  geom_bar(color = 'black', fill = 'lightgray') +
+  geom_text(
+    aes(label = ..count..),
+    stat = "count",
+ #   position = position_dodge2(preserve = "single", width = 1),
+    vjust = -0.5,
+    # hjust = -.5,
+    size = 4
+  ) +
+  #  geom_text(stat = 'count', aes(x = factor(age),label = ..count.., vjust = -0.5,   position = position_dodge(width = 0.9),) ) +
+  #scale_fill_viridis_d(option = 'plasma', name = 'gender') +
+  labs(y = "Count",
+       x = "Age") +
+  theme_tidybayes() +
+  theme(text = element_text(size = 20))+
+  ylim(c(0,95))
+
+ggsave(filename = "plots/demographics_basic.png", height = 3, width = 4)
+
+## make a plot of the age and gender in the sample
+all_data %>% 
+  mutate(gender_f = ifelse(gender == "male", "Male",ifelse(gender == "female", "Female", "Other"))) %>% 
+  select(IDself, age, gender_f) %>% 
+  filter(age < 20) %>% 
+  filter(!is.na(gender_f)) %>% 
+  distinct() %>% 
+ggplot(aes(x = factor(age),
+           fill = factor(gender_f))) +
+  geom_bar(position = position_dodge2(preserve = "single"), width = 1) + 
+  geom_text( aes(label = ..count..),
+    stat = "count",
+    position = position_dodge2(preserve = "single", width = 1),
+    vjust = -0.5,
+   # hjust = -.5,
+    size = 4) +
+#  geom_text(stat = 'count', aes(x = factor(age),label = ..count.., vjust = -0.5,   position = position_dodge(width = 0.9),) ) +
+  scale_fill_viridis_d(option ='plasma',name = 'Gender')+
+  labs(x="Age")+
+  theme_tidybayes() +
+  theme(text = element_text(size = 20)) +
+  ylim(c(0,55))
+
+ggsave(filename = "plots/demographics_full.png", height = 3.5, width = 7)
+
+
+
+```
+
+## Treatments sanity check
+
+### high vs. low status separation
+
+```{r vizualize treatments, message=FALSE, echo=FALSE, warning = FALSE}
+
+all_data_treatment %>% 
+ # filter(!is.na(status_social_info)) %>% 
+ggplot( aes(x = stdinDegreepeer, fill = status_social_info)) +
+  
+  geom_histogram(color = "black",
+                 position = "dodge",
+                 binwidth = .20) +
+  theme_classic() +
+  theme(legend.position = "top") +
+  labs(x =
+                                          "In-degree", y = "Count") +
+      theme(text = element_text(size = 20)) +
+    scale_fill_viridis_d(option = "D", name = 'Peer status', labels = c('Low', 'High')) 
+
+ggsave("plots/treatment_separation.png", height = 4)
+
+```
+
+### Choices in control condition
+
+In the 2019 wave, there was a mistake in coding the control condition, for which it is not true that most of the times participants saw social info = choice in round 1. Thus effect not as clear as in other 2 waves.
+
+Follow rates are overall much higher than the experiment (add number)
+
+```{r control condition}
+
+all_data_control %>%
+  group_by(factor(follow), wave) %>%
+  reframe(count = n(),
+          follow = follow) %>% 
+  distinct() %>% 
+  group_by(wave) %>%
+  reframe(perc = count / sum(count),
+          follow = factor(follow)) %>% 
+  group_by(follow) %>% 
+  mutate(mean_across_waves = mean(perc))
+
+
+ggplot(data = all_data_control) +
+  geom_bar(aes(x = factor(follow))) +
+  facet_grid(~ wave) +
+  labs(title = "Count of follow (1) vs stay (0) in control condition.")
+
+all_data_control %>%
+  group_by(IDself) %>%
+  reframe(mean_follow = mean(follow),
+          wave = wave) %>%
+  ggplot(aes(
+    x = factor(wave),
+    y = mean_follow,
+    fill = factor(wave)
+  )) +
+  geom_half_boxplot() +
+  geom_half_point() +
+  stat_summary() +
+  labs(
+       x = "Study year", y = "Consistency with wave 1") +
+  theme_classic() +
+        theme(text = element_text(size = 20)) +
+    scale_fill_viridis_d(option = "D", name = 'year') 
+  
+ggsave("plots/control_condition.png", height = 4)
+
+```
+
+## Donation rates
+
+Wave 1
+
+```{r wave 1}
+
+## mean and sd for reporting
+mean(data_donations$prop_donations)
+sd(data_donations$prop_donations)
+
+## plot proportion of individual donations
+ggplot(data = data_donations, aes(x = prop_donations)) +
+  geom_histogram(
+    aes(#y = stat(density)/length(unique(prop_donations$ID)),
+        #fill = study
+        ),
+    bins = 20,
+    color = 'black',
+    fill = 'orange'
+  ) +
+  labs(
+      # subtitle = 'Each participants starts with 24 tokens in pilot, 30 in other 2 studies',
+       x = 'proportion of donated tokens',
+       y = 'count')+
+  theme_classic() +
+  #facet_wrap(~study) +
+  guides(fill = 'none')+
+    theme(text = element_text(size = 20)) 
+
+ggsave("plots/donations_w1.png", height = 4)
+```
+
+```{r donations by age}
+
+data_donations %>% 
+ggplot(., aes(x = factor(age), y = prop_donations)) +
+  geom_half_point(
+    aes(#y = stat(density)/length(unique(prop_donations$ID)),
+        #fill = study
+        ),
+     color = 'orange',
+    #fill = 'orange',
+    alpha = .6
+  ) +
+    geom_half_boxplot(
+    aes(#y = stat(density)/length(unique(prop_donations$ID)),
+        #fill = study
+        ),
+     color = 'black',
+    fill = 'orange'
+  ) +
+  stat_summary()+
+  labs(#title = 'Age difference in donations',
+      # subtitle = 'Each participants starts with 24 tokens in pilot, 30 in other 2 studies',
+       x = 'age',
+       y = 'proprtion donated tokens')+
+  theme_classic() +
+  #facet_wrap(~study) +
+  guides(fill = 'none')+
+    theme(text = element_text(size = 20)) 
+
+ggsave("plots/age_donations_w1.png", height = 4)
+
+```
+
+```{r donations by age regression}
+## donation rates by age
+table_age_donations <- data_donations %>% 
+  group_by(age) %>% 
+  summarise(n_participants = n(),
+            mean_donations = round(mean(prop_donations),2),
+            sd = round(sd(prop_donations),2)) 
+
+## make a table
+ft <- flextable(head(table_age_donations)) 
+
+ft <- set_header_labels(ft, age = "Age", 
+    n_participants = "N", mean_donations = "Mean Donations", sd = "SD")
+
+ft <- set_table_properties(ft, layout = "autofit")
+save_as_docx(ft, path = "tables/donations_by_age.docx" )
+```
+
+
+```{r donations by age regression}
+## linear regression
+
+if (file.exists('modelfits/donations_by_age.RData')){
+  
+  base::load('modelfits/donations_by_age.RData')
+
+  } else {
+
+donations_by_age <- data_donations %>% 
+  brm(prop_donations ~ age_scaled , data = .)
+
+save("donations_by_age", file = "modelfits/donations_by_age.RData")
+}
+
+tab_model(donations_by_age)
+
+```
+
+## Plot the raw data
+
+Mean follow rate across all rounds
+
+```{r}
+
+mean_follow_rate_all_rounds <- all_data_treatment %>%
+  summarise(donation_rate = mean(choice))
+
+mean_follow_rate_all_rounds
+
+```
+
+
+lollipop plot: change in following by treatment (H vs L)
+
+``` {r lollipot plot}
+
+all_data_lollipop <- all_data_treatment
+
+mean_data_condition_lollipop <- all_data_lollipop %>%
+  group_by( social_info, status_social_info) %>% 
+  summarise(donation_rate = mean(choice)) %>% 
+  mutate(social_info_factor = ordered(social_info, levels = c("0", "1"), labels = c('Antisocial', 'Prosocial'))) %>% 
+  mutate(status_factor = ordered(status_social_info, levels = c("L", "H"), labels = c("Low", "High"))) %>% 
+  mutate(perc_change = ifelse(social_info == 0, 1 - donation_rate, donation_rate))
+
+
+labels_lollipop <- c(paste0("-", round(mean_data_condition_lollipop$perc_change[1]*100, 0), "%"),
+            paste0("-", round(mean_data_condition_lollipop$perc_change[2]*100, 0), "%"),
+            paste0("+", round(mean_data_condition_lollipop$perc_change[3]*100, 0), "%"),
+            paste0("+", round(mean_data_condition_lollipop$perc_change[4]*100, 0), "%"))
+
+# lollipop version
+lollipop <- 
+ggplot(mean_data_condition_lollipop,
+       aes(x = status_factor, y = donation_rate)) +
+  geom_segment(
+    aes(
+      x = status_factor,
+      xend = status_factor,
+      y = 1 - social_info,
+      yend = donation_rate
+    ),
+    color = "grey",
+    linewidth = 2
+  ) +
+  geom_point(size = 8, aes(color = status_factor)) +
+  geom_text(
+    aes(label = labels_lollipop, x = status_factor, y = donation_rate),
+    vjust = c(1.7, 1.6, -1.1, -.9),
+    size = 8
+  ) +
+  scale_color_viridis_d(option = "D",
+                        name = 'Peer status',
+                        labels = c('Low', 'High')) +
+  labs(
+    title = 'Social influence in the experimental treatments',
+    subtitle = 'Social information was always opposite to participants\' choice in wave 1',
+    x = 'Social information treatment',
+    y = 'Donation rate'
+  ) +
+  #theme_clean()  +
+  theme_light() +
+  scale_x_discrete(breaks = NULL) +
+  facet_grid(cols = vars(social_info_factor), switch = "x") +
+  theme(
+    text = element_text(size = 20),
+    plot.title = element_text(face = "bold", size = 20),
+    plot.subtitle  = element_text(face = "italic", size = 15),
+    axis.text.x = element_blank(),
+    axis.ticks = element_blank(),
+    strip.placement = "outside"
+  )
+
+ggsave(lollipop, filename = "plots/lollipop.png", width = 10)
+
+```
+
+## Statistical analyses and plots of main results
+
+with the combined datasets
+
+```{r pre-reg model, message=FALSE}
+
+## pre-registered regression
+
+## load models
+
+if (file.exists('modelfits/follow_model_all_data_pre_reg.RData')){
+  
+  base::load('modelfits/follow_model_all_data_pre_reg.RData')
+
+  } else {
+
+follow_model_all_data_pre_reg <-
+  brm(
+    follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled +  (1|IDself/classNr) ,
+    data = all_data_treatment,
+    bernoulli(link = "logit"),
+    cores = 3,
+    chains = 4,
+    iter = 3000
+  )
+save("follow_model_all_data_pre_reg", file = 'modelfits/follow_model_all_data_pre_reg.RData')
+}
+
+
+sjPlot::tab_model(follow_model_all_data_pre_reg)
+
+
+```
+
+
+
+
+```{r plot pre-reg regressions}
+## make a table with results
+sjPlot::tab_model(follow_model_all_data_pre_reg, show.est = TRUE, dv.labels = c("Follow"), pred.labels = c("Intercept", "Social Information [Donate]", "Age", "Peer In-degree", "Social Information [Donate] : Age", " Age : Peer In-degree" ), file = "tables/follow_model_all_data_pre_reg.doc")
+
+## plot regression coefficients
+spaghetti_plot <- plot_model(follow_model_all_data_pre_reg, show.values = TRUE, vline.color = "red", dv.labels = c("Follow"), pred.labels = c("Intercept", "Social Information [Donate]", "Age", "Peer In-degree", "Social Information [Donate] : Age", " Age : Peer In-degree" )) +
+  theme_classic()
+
+ggsave(spaghetti_plot, filename = "plots/spaghetti_plot.png")
+
+
+```
+
+## Robustness checks
+
+1.  model without 2019 data
+
+```{r robustness check 1}
+
+## check if present, if not run regression as well
+
+if (file.exists('modelfits/follow_model_no2019_pre_reg.RData')){
+  
+  base::load('modelfits/follow_model_no2019_pre_reg.RData')
+
+  } else {
+
+data_model_no2019 <- all_data_treatment %>% 
+  filter(wave != "2019")
+
+## pre-registered regression, without oldest wave
+
+follow_model_no2019 <-
+  brm(
+    follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled +  (1|IDself/classNr/wave) ,
+    data = data_model_no2019,
+    bernoulli(link = "logit"),
+    cores = 3,
+    chains = 4,
+    iter = 3000
+  )
+
+save("follow_model_no2019", file = 'modelfits/follow_model_no2019_pre_reg.RData')
+
+  }
+
+tab_model(follow_model_no2019)
+
+```
+
+pre-registered exploratory model
+
+```{r intervention model}
+
+all_data_intervention %>% 
+  filter(treatment == 4) %>% 
+  summarise(mean(choice))
+
+
+intervetion_model <- all_data_intervention %>% 
+  filter(treatment == 4) %>% 
+  brm(data = ., choice ~ (1|IDself), bernoulli(link = "logit"),
+    #cores = 3,
+    chains = 4,
+    iter = 5000)
+
+tab_model(intervetion_model)
+
+```
+
+
+exploratory model with additional interaction
+
+```{r exploratory model 1}
+
+if (file.exists('modelfits/follow_model_all_data_exploratory.RData')) {
+  base::load('modelfits/follow_model_all_data_exploratory.RData')
+} else{
+  follow_model_all_data_exploratory <-
+    brm(
+      follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled +  stdinDegreepeer * social_info_factor +  (1 |
+                                                                                                                               IDself / classNr / wave) ,
+      data = all_data_treatment,
+      bernoulli(link = "logit"),
+      cores = 3,
+      chains = 4,
+      iter = 3000
+    )
+  
+  save("follow_model_all_data_exploratory", file = 'modelfits/follow_model_all_data_exploratory.RData')
+  
+}
+
+summary(follow_model_no2019)
+conditional_effects(follow_model_no2019)
+```

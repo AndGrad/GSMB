@@ -1,0 +1,769 @@
+---
+title: "simulations"
+format: html
+editor: visual
+---
+
+# Simulations
+
+*Explanation*
+
+## Prepare the environments
+
+```{r}
+###------------------------------------------------------------------------
+###------------------------------------------------------------------------
+###                                                                     ---
+###      SIMLATE SPREAD OF TRAIT THROUGH NETWORK, 1 INFECTOR MODEL      ---
+###                                                                     ---
+###------------------------------------------------------------------------
+###------------------------------------------------------------------------
+
+## load packages
+pacman::p_load(tidyverse, 
+               igraph,
+               here,
+               DT,
+               doParallel,
+               parallel,
+               foreach,
+               ggrain,
+               ggthemes,
+               gghalves,
+               tidybayes)
+
+## function for later
+sample.vec <- function(x, ...) x[sample(length(x), ...)]
+
+## load data
+folder1 <- 'data/2019/networks/'
+folder2 <- 'data/2020/networks/'
+folder3 <- 'data/2022/networks/'
+folders <- list(folder1, folder2, folder3)
+full_edge_list <- list()
+
+## load functions to perform simulations
+
+#source('../scripts/functions/simulate_spread_1_infector_fun.R')
+source('scripts/functions/simulate_spread_1_infector_fun_with_full_network.R')
+```
+
+## Load the networks
+
+```{r}
+## go through different datasets and load classes
+for (n in 1:3){
+  
+  list_edge_files <- list.files(path = folders[[n]])
+  
+  for (t in 1: length(list_edge_files)){
+    this_list <- list_edge_files[t]
+    edge_list <- read.table(paste0(folders[[n]], this_list), header = TRUE)
+    edge_list$classNr <-  as.numeric(substr(as.character(edge_list$IDself[1]), 1, 3))
+    full_edge_list <- c(full_edge_list, list(edge_list) )
+    
+  }
+}
+```
+
+## Simulation loop 1: High vs Low
+
+```{r}
+## how many networks
+sim_dat_all_nets <- list(length(full_edge_list))
+
+## how many treatments
+treatments <- data.frame(treatment = c("no_structure_no_status", "structure_no_status", "no_structure_status", "structure_status"),
+                         p_copy_high = c(.5, .5, .54, .54),
+                         p_copy_low =  c(.5, .5, .46, .46)
+                         )
+
+## how many runs (in the long term, 1000)
+## needs to be even, otherwise treatments are not split equally
+sim_runs <- 3000
+
+## set seed
+set.seed(1818)
+
+## how many cores
+cl <- makePSOCKcluster(detectCores() - 1)
+
+## register cores, adapt to the machine where the code is running
+registerDoParallel(cores = cl)
+
+## start parallel loop
+simulations_data_list <- foreach(
+  net = unique(full_edge_list), #for each network
+  .packages = c("dplyr")
+) %dopar% {
+  ## function to run simulation
+  simulate_diffusion(net = net, sim_runs = sim_runs, treatments = treatments)
+}
+
+```
+
+## Save/Load results
+
+```{r}
+
+## save final output
+save(list = c("simulations_data_list"), file = "simulations/sim_result_3000_1_infector_4treatments.rda")
+# save(list = c("simulations_data_list"), file = "simulations/sim_result_2000_1_infector_control_high_low.rda")
+#save(list = c("simulations_data_list"), file = "simulations/sim_result_500_1_infector_control_high_low.rda")
+#save(list = c("simulations_data_list"), file = "simulations/sim_result_1000_1_infector.rda")
+#save(list = c("simulations_data_list"), file = "simulations/sim_result_2000_1_infector_control.rda")
+
+
+```
+
+## Vizualise results
+
+```{r}
+## load data
+base::load("simulations/sim_result_3000_1_infector_4treatments.rda")
+
+## create data frame from list
+df_sims <- bind_rows(simulations_data_list, .id = "column_label") %>% 
+  filter(!if_any(everything(), is.na))  %>% 
+  filter(classNr != 103 & classNr!=105) %>% ## remove classes with separate components where diffusion cannot happen
+  group_by(classNr) %>% ## group by class to separate network size
+  mutate(fixp = 1/net_size, ## theoretical fixation probabily, 1/N
+         fixt = 4*net_size) %>% ## theoretical fixation time, 4N
+  ungroup()  
+
+benchmark_t <- df_sims %>% 
+  group_by(classNr) %>% 
+  select(iter, classNr, treatment) %>% 
+  filter(treatment == "no_structure_no_status")  %>% 
+  summarise(benchmark_t_sims = mean(iter)) 
+
+benchmark_t_conditional <- df_sims %>% 
+  group_by(classNr) %>% 
+  select(iter, classNr, treatment, result) %>% 
+  filter(treatment == "no_structure_no_status" & result == 1)  %>% 
+  summarise(benchmark_t_sims_conditional = mean(iter)) 
+
+df_sims <- left_join(df_sims, benchmark_t, by = "classNr")
+df_sims <- left_join(df_sims, benchmark_t_conditional, by = "classNr")
+
+df_sims[!complete.cases(df_sims), ]
+
+## check that treatment recording worked correctly
+df_sims %>% 
+  ungroup() %>% 
+  select(treatment) %>% 
+  distinct()
+
+## calcualte range of networks
+range(df_sims$net_size)
+
+## check theoretical fixp by network
+
+df_sims %>% 
+  select(classNr, net_size, fixp) %>% 
+  distinct() %>% 
+  ggplot(aes(x = net_size, y = fixp)) +
+  geom_point(aes(color = factor(classNr)))
+
+ # geom_text(aes(label = classNr), position = position_jitter())
+ ## make a table to summarize results by treatment
+
+## check theoretical fixt by network
+df_sims %>% 
+  select(classNr, net_size, fixt) %>% 
+  distinct() %>% 
+  ggplot(aes( x = net_size, y = fixt)) +
+  geom_point(aes(color = factor(classNr)))
+
+## create outcome variables
+results <- df_sims %>% 
+  group_by(treatment, status, classNr) %>% 
+  mutate(tot_B = sum(result), ## total fixations on B
+         tot_A = (n_runs[1]/2) - tot_B,
+         perc_B = tot_B/(n_runs[1]/2), ## %success
+         S = perc_B/fixp,
+         T = iter/benchmark_t_sims,
+         T_conditional = iter/benchmark_t_sims_conditional) 
+
+## select network that reached fixation of trait B
+fixated_B <- results %>% 
+  filter(iter < 10000 & result == 1) %>% 
+  ungroup()
+
+#### VISUAL EXPLORATION
+results %>% 
+  select(fixp, perc_B, status, treatment, classNr) %>% 
+  distinct() %>% 
+  ggplot(aes(x = fixp, y = perc_B)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  facet_wrap(~ treatment+status, nrow = 1)
+
+## fix time
+results %>% 
+  filter(result == 1) %>% 
+  select(iter, benchmark_t_sims_conditional, status, treatment, classNr) %>% 
+  distinct() %>% 
+  ggplot(aes(x = benchmark_t_sims_conditional, y = iter)) +
+  stat_summary() +
+  geom_abline(slope = 1, intercept = 0) +
+  facet_wrap(~ treatment+status, nrow = 1)
+```
+
+```{r}
+## quick version of final plots
+
+#### 
+fixated_B %>% 
+  select(fixp, S, status, treatment, classNr) %>% 
+  distinct() %>%
+  ggplot() +
+  stat_summary(aes(x = status, y = S)) +
+  facet_wrap(~ treatment, nrow = 1)
+
+##
+fixated_B %>% 
+  distinct() %>%
+  ggplot() +
+#  stat_summary(aes(x = status, y = T)) +
+  stat_summary(aes(x = status, y = T_conditional)) +
+  facet_wrap(~ treatment, nrow = 1)
+
+
+panel_labels <- c(
+                    `no_structure_no_status` = "Simulated benchmark",
+                    `no_structure_status` = "Status bias",
+                    `structure_no_status` = "Network structure",
+                    `structure_status` = "Network structure\nand status bias"
+                    )
+
+```
+
+Paper plot fixation proportion
+
+```{r}
+
+plot_fixation_proporion_dataset <- 
+fixated_B %>%
+  group_by(classNr) %>% 
+  mutate(side = ifelse(status == "High", -1, 1)) %>%
+  group_by(status, treatment, classNr) %>%
+  reframe(
+    S,
+    net_size = net_size,
+    classNr = as.character(classNr),
+  ) %>%
+  filter(treatment != "no_structure_no_status") %>% 
+  distinct() 
+
+
+ggplot(data = plot_fixation_proporion_dataset, aes(x = status, y = S)) +
+  geom_hline(aes(yintercept = 1), color = 'blue') +
+  geom_half_boxplot(
+    data = plot_fixation_proporion_dataset[which(plot_fixation_proporion_dataset$status == "High"), ],
+    nudge = .1,
+    width = .6,
+    outlier.shape = NA,
+    errorbar.length = .2
+  ) +
+  geom_half_boxplot(
+    data = plot_fixation_proporion_dataset[which(plot_fixation_proporion_dataset$status == "Low"), ],
+    side = "r",
+    nudge = .1,
+    width = .6,
+    outlier.shape = NA,
+    errorbar.length = .2
+  ) +
+  geom_point(aes(shape = status)) +
+  stat_summary(data = plot_fixation_proporion_dataset[which(plot_fixation_proporion_dataset$status == "High"), ],
+               shape = 21,
+               fill = 'white',
+               size = 1.1,
+               stroke = 2,
+               position = position_nudge(x = -.1)) +
+   stat_summary(data = plot_fixation_proporion_dataset[which(plot_fixation_proporion_dataset$status == "Low"), ],
+               shape = 24,
+               fill = 'white',
+               size = 1.1,
+               stroke = 2,
+               position = position_nudge(x = .1)) +
+  geom_line(aes(group = classNr), color = 'grey' ) +
+  # geom_text(
+  #   aes(label = ifelse(
+  #     classNr %in% c("116", "106", "123", ""),
+  #     as.character(classNr),
+  #     ''
+  #   )),
+  #   position = position_dodge(width = 0.75),
+  #   vjust = -0.5,
+  #   # hjust = 2,
+  #   color = "red"
+  # ) +
+  geom_text(x = 2.5, y = 1, label = "benchmark", color = "blue", size = 4, hjust = 1.2, vjust = -0.2) +
+  geom_hline(aes(yintercept = 1), color = 'blue') +
+  theme_tidybayes() +
+  theme(text = element_text(size = 18)) +
+  labs(y = 'Succesful interventions relative to benchmark (S)', 
+       x = '"Influencer" status') +
+  guides(shape = 'none') +
+    facet_wrap( ~ treatment, nrow = 1, labeller = as_labeller(panel_labels))
+
+ggsave('plots/simulations_results_full_supplement.png', height = 6.5, width = 10)
+
+
+
+```
+
+## Paper plot fixation time
+
+```{r}
+## dataset with means
+plot_fixation_time_dataset <-
+  fixated_B %>%
+  group_by(classNr) %>% 
+  mutate(side = ifelse(status == "High", -1, 1)) %>%
+  group_by(status, treatment, classNr) %>%
+  filter(treatment != "no_structure_no_status") %>% 
+    select(
+    T_conditional,
+  ) %>%
+  summarise(meanT = mean(T_conditional)) %>% 
+  distinct() 
+
+  
+ggplot(data = plot_fixation_time_dataset, aes(x = status, y = meanT)) +
+  geom_hline(aes(yintercept = 1), color = 'blue') +
+  geom_half_boxplot(
+    data = plot_fixation_time_dataset[which(plot_fixation_time_dataset$status == "High"), ],
+    nudge = .1,
+    width = .6,
+    outlier.shape = NA,
+    errorbar.length = .2
+  ) +
+  geom_half_boxplot(
+    data = plot_fixation_time_dataset[which(plot_fixation_time_dataset$status == "Low"), ],
+    side = "r",
+    nudge = .1,
+    width = .6,
+    outlier.shape = NA,
+    errorbar.length = .2
+  ) +
+  geom_point(aes(shape = status)) +
+  stat_summary(data = plot_fixation_time_dataset[which(plot_fixation_time_dataset$status == "High"), ],
+               aes(x = status, y = meanT),
+               shape = 21,
+               fill = 'white',
+               size = 1.1,
+               stroke = 2,
+               position = position_nudge(x = -.1)) +
+   stat_summary(data = plot_fixation_time_dataset[which(plot_fixation_time_dataset$status == "Low"), ],
+               aes(x = status, y = meanT),
+               shape = 24,
+               fill = 'white',
+               size = 1.1,
+               stroke = 2,
+               position = position_nudge(x = .1)) +
+  geom_line(aes(group = classNr), color = 'grey' ) +
+  # geom_text(
+  #   aes(label = ifelse(
+  #     classNr %in% c("116", "106", "123", ""),
+  #     as.character(classNr),
+  #     ''
+  #   )),
+  #   position = position_dodge(width = 0.75),
+  #   vjust = -0.5,
+  #   # hjust = 2,
+  #   color = "red"
+  # ) +
+  geom_text(x = 2.5, y = 1, label = "benchmark", color = "blue", size = 4, hjust = 1.2, vjust = -0.2) +
+  geom_hline(aes(yintercept = 1), color = 'blue') +
+  theme_tidybayes() +
+  theme(text = element_text(size = 18)) +
+  labs(x = '"Influencer" status', 
+       y = 'Intervention duration relative to benchmark (T)') +
+  guides(shape = 'none') +
+  facet_wrap( ~ treatment, nrow=1, labeller = as_labeller(panel_labels))
+
+ggsave('plots/simulations_results_fixation_time_full_supplement.png', height = 6.5, width = 10)
+
+```
+
+## Paper summary of results across conditions
+
+```{r}
+
+fixated_B %>% 
+  group_by(treatment, status, classNr) %>% 
+  summarise(meanS = mean(S)) %>% 
+  ungroup () %>% 
+  group_by(treatment, status) %>% 
+  summarise(mean_S = mean(meanS),
+            sd = sd(meanS))
+
+mean(plot_fixation_proporion_dataset$S)
+
+## summary of percentage fixated
+results %>% 
+  select(S, treatment, status, classNr, perc_B) %>% 
+  group_by(treatment, status) %>% 
+  summarise(meanS = mean(S),
+            perc_B = mean(perc_B)*100)
+
+
+results %>% 
+  filter(result == 1) %>% 
+  select(iter, treatment, status, classNr, T_conditional, benchmark_t_sims_conditional) %>% 
+  group_by(treatment, status) %>% 
+  summarise(meaniter = mean(iter),
+            meanT = mean(T_conditional), 
+            benchmark_t_sims_conditional = mean(benchmark_t_sims_conditional)) %>% 
+  mutate(mean_t_bench = mean(benchmark_t_sims_conditional))
+
+
+
+
+```
+
+## old version below
+
+```{r}
+# 
+# plot_fixation_proporion_dataset <- 
+# fixated_B %>%
+#   ungroup() %>%
+#   group_by(classNr) %>% 
+#   mutate(mean_fix_p = n_runs * 1 / mean(net_size) / 2,
+#          side = ifelse(status == "High", -1, 1)) %>%
+#   group_by(status, treatment, classNr) %>%
+#   reframe(
+#     how_many_fixated = n() / mean_fix_p,
+#     n_runs = n_runs,
+#     net_size = net_size,
+#     classNr = as.character(classNr),
+#   ) %>%
+#   distinct() 
+# 
+# plot_dataset %>% 
+#   group_by(treatment, status) %>% 
+#   summarise(mean_fix = mean(how_many_fixated))
+# 
+# 
+# ggplot(data = plot_dataset, aes(x = status, y = how_many_fixated)) +
+#   geom_hline(aes(yintercept = 1), color = 'blue') +
+#   geom_half_boxplot(
+#     data = plot_dataset[which(plot_dataset$status == "High"), ],
+#     nudge = .1,
+#     width = .6,
+#     outlier.shape = NA,
+#     errorbar.length = .2
+#   ) +
+#   geom_half_boxplot(
+#     data = plot_dataset[which(plot_dataset$status == "Low"), ],
+#     side = "r",
+#     nudge = .1,
+#     width = .6,
+#     outlier.shape = NA,
+#     errorbar.length = .2
+#   ) +
+#   geom_point(aes(shape = status)) +
+#   stat_summary(data = plot_dataset[which(plot_dataset$status == "High"), ],
+#                shape = 21,
+#                fill = 'white',
+#                size = 1.1,
+#                stroke = 2,
+#                position = position_nudge(x = -.1)) +
+#    stat_summary(data = plot_dataset[which(plot_dataset$status == "Low"), ],
+#                shape = 24,
+#                fill = 'white',
+#                size = 1.1,
+#                stroke = 2,
+#                position = position_nudge(x = .1)) +
+#   geom_line(aes(group = classNr), color = 'grey' ) +
+#   geom_text(
+#     aes(label = ifelse(
+#       classNr %in% c("116", "106", "123", ""),
+#       as.character(classNr),
+#       ''
+#     )),
+#     position = position_dodge(width = 0.75),
+#     vjust = -0.5,
+#     # hjust = 2,
+#     color = "red"
+#   ) +
+#   geom_text(x = 2.5, y = 1, label = "benchmark", color = "blue", size = 4, hjust = 1.2, vjust = -0.2) +
+#   geom_hline(aes(yintercept = 1), color = 'blue') +
+#   theme_tidybayes() +
+#   theme(text = element_text(size = 18)) +
+#   labs(x = '"N of succesful interventions', 
+#        y = 'N of fixations on B') +
+#   guides(shape = 'none') +
+#     facet_wrap( ~ treatment, nrow = 1)
+# 
+# ggsave('plots/simulations_results_main.png', height = 4.5, width = 4.4)
+# 
+
+
+```
+
+```{r}
+df_sims %>% 
+  group_by(treatment, status) %>% 
+  mutate(tot_B = sum(result), ## total fixations on B
+         tot_A = (n_runs[1]/2*22) - tot_B,
+         perc_B = tot_B/(n_runs[1]*22/2)*100, ## %success
+         fixp = fixp*100, ## % benchmark
+         S = perc_B/fixp) %>% ## %succes relative to benchmark 
+ select(tot_A, tot_B, treatment, status, perc_B, fixp, S) %>% 
+  distinct() 
+
+
+results_table 
+
+## are there an equal number of high and low status runs?
+df_sims %>%
+  select(classNr, status, treatment) %>%
+  group_by(classNr, status, treatment) %>%
+  summarise(count = n()) %>%
+  ggplot() +
+  geom_col(aes(x = treatment, y = count, fill = status)) +
+  facet_wrap( ~ classNr)
+
+# plot(0,0,xlim = c(1,10000),ylim = c(0,1),type = "n")
+# 
+# for(n in 1:nrow(df_sims)){
+# 
+# lines(df_sims$dynamic[[n]])
+# 
+#   }
+
+# df_sims_covergence_p <- df_sims %>% 
+#   select(-c(dynamic)) 
+
+## how many sims fixated
+fixated_total <- df_sims %>% 
+  filter(iter < 10000) %>% 
+  nrow()
+
+# how many sims did not fixate
+fixated_percentage <- 1 - (fixated_total/nrow(df_sims))
+
+
+## summarize count
+fixated_B %>% 
+  group_by(status, classNr) %>% 
+  summarise(count = n()) %>% 
+  group_by(status) %>% 
+  summarize(mean_fixation_across_status= mean(count)) 
+
+
+## @ lucas: big difference depending on what level of result we are aggregating (driven by sample)
+fixated_B %>% 
+  # group_by(classNr, treatment, status) %>%
+  # summarise(mean_t = mean(fix_over_t)) %>%
+  ungroup() %>% 
+  group_by(treatment,status) %>% 
+  summarise(mean_t = mean(iter),
+    mean_t_treat  = mean(fix_over_t),
+            sd_t_treat = sd(fix_over_t))
+            
+            
+fixated_B %>% 
+  group_by(classNr, treatment, status) %>%
+  summarise(mean_t = mean(fix_over_t)) %>%
+  ungroup() %>% 
+  group_by(treatment,status) %>% 
+  summarise(mean_t_treat  = mean(mean_t),
+            sd_t_treat = sd(mean_t))
+          
+          
+  ggplot() +
+  geom_boxplot(aes(x=status, y = mean_t)) +
+  #stat_summary(aes(x=status, y = fix_over_t)) +
+  facet_wrap(~treatment)
+
+  
+## compare to 1/n fixation probability
+ggplot(data = fixated_B) +
+  geom_bar(aes(x = status)) +
+  geom_hline(aes(yintercept = fixp*n_runs/2)) +
+    facet_wrap(~classNr+ treatment)
+
+## aggregate @andrea change this to mean!
+
+# a <- fixated_B %>%
+#   ungroup() %>%
+#   mutate(mean_fix_p = n_runs * 1 / mean(net_size) / 2) %>%
+#   group_by(status, treatment, classNr) %>%
+#   reframe(
+#     how_many_fixated = n() - mean_fix_p,
+#     n_runs = n_runs,
+#     net_size = net_size,
+#     classNr = classNr
+#   ) %>%
+#   distinct() %>%
+#   ggplot(aes(x = status, y = how_many_fixated)) +
+#   geom_half_boxplot() +
+#   geom_half_point(aes(), side = "r", range_scale = .5) +
+#   geom_line(aes(group = status), alpha = 0.6, colour = "black")+
+#   facet_wrap( ~ treatment)
+# 
+#   
+#   a +  geom_line(aes(group = status), color = "blue")
+# a
+```
+
+Plot differences in fixation by treatment
+
+```{r}
+
+p
+```
+
+Understand why the mean is so different if I plot from all the sims
+
+```{r}
+
+## dataset with means
+plot_fixation_time_dataset <- fixated_B %>%
+  filter(treatment != "no_structure_no_status") %>% 
+  group_by(classNr) %>%
+  mutate(null_time = ifelse(status=="High", mean(fixated_B$iter[fixated_B$treatment=="no_structure_no_status" & fixated_B$status == "High"]), mean(fixated_B$iter[fixated_B$treatment=="no_structure_no_status" & fixated_B$status == "Low"])),
+         fix_over_t = iter/null_time) %>% 
+  group_by(classNr, status, treatment) %>% 
+  reframe(
+    mean_fixation_time = mean(fix_over_t),
+    classNr = as.character(classNr)) %>% 
+  distinct() 
+
+
+ggplot(data = plot_fixation_time_dataset, aes(x = status, y = mean_fixation_time)) +
+  geom_hline(aes(yintercept = 1), color = 'blue') +
+  geom_half_boxplot(
+    data = plot_fixation_time_dataset[which(plot_fixation_time_dataset$status == "High"), ],
+    nudge = .1,
+    width = .6,
+    outlier.shape = NA,
+    errorbar.length = .2
+  ) +
+  geom_half_boxplot(
+    data = plot_fixation_time_dataset[which(plot_fixation_time_dataset$status == "Low"), ],
+    side = "r",
+    nudge = .1,
+    width = .6,
+    outlier.shape = NA,
+    errorbar.length = .2
+  ) +
+  geom_point(aes(shape = status)) +
+  stat_summary(data = plot_fixation_time_dataset[which(plot_fixation_time_dataset$status == "High"), ],
+               aes(x = status, y = mean_fixation_time),
+               shape = 21,
+               fill = 'white',
+               size = 1.1,
+               stroke = 2,
+               position = position_nudge(x = -.1)) +
+   stat_summary(data = plot_fixation_time_dataset[which(plot_fixation_time_dataset$status == "Low"), ],
+               aes(x = status, y = mean_fixation_time),
+               shape = 24,
+               fill = 'white',
+               size = 1.1,
+               stroke = 2,
+               position = position_nudge(x = .1)) +
+  geom_line(aes(group = classNr), color = 'grey' ) +
+  geom_text(
+    aes(label = ifelse(
+      classNr %in% c("116", "106", "123", ""),
+      as.character(classNr),
+      ''
+    )),
+    position = position_dodge(width = 0.75),
+    vjust = -0.5,
+    # hjust = 2,
+    color = "red"
+  ) +
+  geom_text(x = 2.5, y = 1, label = "benchmark", color = "blue", size = 4, hjust = 1.2, vjust = -0.2) +
+  geom_hline(aes(yintercept = 1), color = 'blue') +
+  theme_tidybayes() +
+  theme(text = element_text(size = 18)) +
+  labs(x = '"Influencer" status', 
+       y = 'Intervention duration') +
+  guides(shape = 'none') +
+  facet_wrap( ~ treatment)
+
+# time to fixation is higher in high status
+fixated_B %>%
+  group_by(classNr) %>%
+  mutate(null_time = 4*size,
+         fix_over_n = iter/null_time) %>% 
+  group_by(classNr, status, treatment) %>% 
+  mutate(mean_fixation_time = mean(fix_over_n)) %>% 
+  ggplot(aes(x = factor(status), y = fix_over_n)) +
+  geom_half_boxplot(aes(y = mean_fixation_time, x = factor(status)))+
+  geom_half_point(aes(y = mean_fixation_time, x = factor(status))) +
+  stat_summary() +
+    geom_hline(aes(yintercept = 1), color = 'blue') +
+ theme_tidybayes() +
+  theme(text = element_text(size = 18)) +
+  labs(x = '"Influencer" status', 
+       y = 'Time to fixation') +
+  guides(shape = 'none') +
+    facet_wrap( ~ treatment)
+
+ggsave('plots/simulations_results_fixation_time.png', height = 4.5, width = 8.4)
+
+
+## easy regression
+fixated_B %>%
+  #filter(treatment == 'high_vs_low') %>% 
+  #group_by(classNr) %>% 
+  #mutate(stdindegree = scale(indegree)) %>% # wrong, I need the whole distribution
+  ggplot(aes(x = indegree, y = iter)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ treatment)
+
+## are simulations with high-status peers faster?
+fixated_B %>%
+  filter(treatment == 'high_vs_low') %>% 
+  mutate(centered_indegree = scale(indegree)) %>% 
+  brm(iter ~ indegree , data=., chains = 4, iter = 4000)
+
+```
+
+```{r}
+# fixated_B %>%
+#   filter(treatment!="control") %>% 
+#   ungroup() %>%
+#   mutate(mean_fix_p = n_runs * 1 / mean(net_size) / 2) %>%
+#   group_by(status, treatment, classNr) %>%
+#   reframe(
+#     how_many_fixated = n() / mean_fix_p,
+#     n_runs = n_runs,
+#     net_size = net_size,
+#     classNr = as.character(classNr)
+#   ) %>%
+#   distinct() %>%
+#   ggplot(aes(status, how_many_fixated)) +
+#   geom_rain(
+#     alpha = .8,
+#     rain.side = 'f1x1',
+#     id.long.var = "classNr",
+#     violin.args = list(color = NA, alpha = 0),
+#     point.args = list(),
+#     boxplot.args = list(width = .4)
+#   ) +
+#   geom_hline(aes(yintercept = 1)) +
+#   geom_text(
+#     aes(label = ifelse(
+#      classNr %in% c("116", "106", "123", ""), as.character(classNr), ''
+#     )),
+#     position = position_dodge(width = 0.75),
+#     vjust = -0.5,
+#    # hjust = 2,
+#     color = "red"
+#   ) +
+#  # facet_wrap(~ treatment)+
+#   theme_base(base_size = 15)+
+#   labs(x='"Influencer" status', y='Frequency of fixation relative to baseline')
+
+#ggsave("plots/simulation_main.png")
+```
