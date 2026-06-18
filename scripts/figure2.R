@@ -8,31 +8,10 @@
 
 ## Data import and wrangling
 source("scripts/functions/check_pkgs.R") # when rendering
-
-#### upper panel
-
-## data is prepared in scripts/prep_data.R
-all_data <- read.csv(file = 'data_experiments/full_dataset_3waves_2023.csv') %>% 
-  mutate(follow = ifelse(choice == social_info, 1, 0),
-         social_info_factor = factor(social_info),
-         age_scaled = scale(age, scale = FALSE)) ## center but not standardize
-
-## subset experimental treatments
-all_data_treatment <- all_data %>% 
-  dplyr::filter(treatment != 2 & treatment != 4 & treatment != 5 ) %>% 
-  mutate(follow = ifelse(choice == social_info, 1, 0),
-         social_info_factor = factor(social_info))
-
-## control condition: social info == choice wave 1
-all_data_control <- all_data %>% 
-  dplyr::filter(treatment == 2)
-
-## part 2, only added in 2020 and 2022 waves
-all_data_intervention <- all_data %>% 
-  dplyr::filter(treatment > 3)
+source("scripts/load_environment.R")
 
 ## read dataset with donation in first wave
-data_donations <- read.csv("data_experiments/individual_donations_1stsession__3waves")
+data_donations <- read.csv("data_experiments/individual_donations_session1.csv")
 
 ## save main dataset into new one for the plot
 all_data_lollipop <- all_data_treatment

@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns
+         http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+<!-- Created by igraph -->
+  <key id="v_name" for="node" attr.name="name" attr.type="string"/>
+  <key id="v_gender" for="node" attr.name="gender" attr.type="string"/>
+  <key id="v_indeg" for="node" attr.name="indeg" attr.type="double"/>
+  <key id="v_gender_colors" for="node" attr.name="gender_colors" attr.type="string"/>
+  <graph id="G" edgedefault="directed">
+    <node id="n0">
+      <data key="v_name">12102</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">11</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n1">
+      <data key="v_name">12112</data>
+      <data key="v_gender">female</data>
+      <data key="v_indeg">11</data>
+      <data key="v_gender_colors">#ba543d</data>
+    </node>
+    <node id="n2">
+      <data key="v_name">12103</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">11</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n3">
+      <data key="v_name">12105</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">14</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n4">
+      <data key="v_name">12104</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">12</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n5">
+      <data key="v_name">12106</data>
+      <data key="v_gender">female</data>
+      <data key="v_indeg">14</data>
+      <data key="v_gender_colors">#ba543d</data>
+    </node>
+    <node id="n6">
+      <data key="v_name">12116</data>
+      <data key="v_gender">female</data>
+      <data key="v_indeg">14</data>
+      <data key="v_gender_colors">#ba543d</data>
+    </node>
+    <node id="n7">
+      <data key="v_name">12117</data>
+      <data key="v_gender">female</data>
+      <data key="v_indeg">17</data>
+      <data key="v_gender_colors">#ba543d</data>
+    </node>
+    <node id="n8">
+      <data key="v_name">12119</data>
+      <data key="v_gender">female</data>
+      <data key="v_indeg">11</data>
+      <data key="v_gender_colors">#ba543d</data>
+    </node>
+    <node id="n9">
+      <data key="v_name">12121</data>
+      <data key="v_gender">female</data>
+      <data key="v_indeg">7</data>
+      <data key="v_gender_colors">#ba543d</data>
+    </node>
+    <node id="n10">
+      <data key="v_name">12126</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">7</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n11">
+      <data key="v_name">12118</data>
+      <data key="v_gender">female</data>
+      <data key="v_indeg">8</data>
+      <data key="v_gender_colors">#ba543d</data>
+    </node>
+    <node id="n12">
+      <data key="v_name">12109</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">20</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n13">
+      <data key="v_name">12115</data>
+      <data key="v_gender"></data>
+      <data key="v_indeg">19</data>
+      <data key="v_gender_colors">NA</data>
+    </node>
+    <node id="n14">
+      <data key="v_name">12122</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">9</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n15">
+      <data key="v_name">12120</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">10</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n16">
+      <data key="v_name">12110</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">25</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n17">
+      <data key="v_name">12111</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">18</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n18">
+      <data key="v_name">12127</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">8</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n19">
+      <data key="v_name">12114</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">15</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n20">
+      <data key="v_name">12107</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">18</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n21">
+      <data key="v_name">12128</data>
+      <data key="v_gender">male</data>
+      <data key="v_indeg">13</data>
+      <data key="v_gender_colors">#56ae6c</data>
+    </node>
+    <node id="n22">
+      <data key="v_name">12123</data>
+      <data key="v_gender">female</data>
+      <data key="v_indeg">5</data>
+      <data key="v_gender_colors">#ba543d</data>
+    </node>
+    <node id="n23">
+      <data key="v_name">12124</data>
+      <data key="v_gender">unknown</data>
+      <data key="v_indeg">5</data>
+      <data key="v_gender_colors">#FFFFFF</data>
+    </node>
+    <node id="n24">
+      <data key="v_name">12113</data>
+      <data key="v_gender">unknown</data>
+      <data key="v_indeg">11</data>
+      <data key="v_gender_colors">#FFFFFF</data>
+    </node>
+    <node id="n25">
+      <data key="v_name">12108</data>
+      <data key="v_gender">unknown</data>
+      <data key="v_indeg">22</data>
+      <data key="v_gender_colors">#FFFFFF</data>
+    </node>
+    <node id="n26">
+      <data key="v_name">89001</data>
+      <data key="v_gender">unknown</data>
+      <data key="v_indeg">6</data>
+      <data key="v_gender_colors">#FFFFFF</data>
+    </node>
+    <node id="n27">
+      <data key="v_name">89002</data>
+      <data key="v_gender">unknown</data>
+      <data key="v_indeg">7</data>
+      <data key="v_gender_colors">#FFFFFF</data>
+    </node>
+    <edge source="n0" target="n4">
+    </edge>
+    <edge source="n0" target="n5">
+    </edge>
+    <edge source="n0" target="n17">
+    </edge>
+    <edge source="n0" target="n25">
+    </edge>
+    <edge source="n1" target="n4">
+    </edge>
+    <edge source="n1" target="n5">
+    </edge>
+    <edge source="n1" target="n12">
+    </edge>
+    <edge source="n1" target="n16">
+    </edge>
+    <edge source="n1" target="n17">
+    </edge>
+    <edge source="n1" target="n25">
+    </edge>
+    <edge source="n2" target="n5">
+    </edge>
+    <edge source="n2" target="n7">
+    </edge>
+    <edge source="n2" target="n8">
+    </edge>
+    <edge source="n2" target="n11">
+    </edge>
+    <edge source="n2" target="n13">
+    </edge>
+    <edge source="n2" target="n15">
+    </edge>
+    <edge source="n3" target="n6">
+    </edge>
+    <edge source="n3" target="n12">
+    </edge>
+    <edge source="n3" target="n13">
+    </edge>
+    <edge source="n3" target="n16">
+    </edge>
+    <edge source="n3" target="n17">
+    </edge>
+    <edge source="n3" target="n20">
+    </edge>
+    <edge source="n3" target="n25">
+    </edge>
+    <edge source="n3" target="n26">
+    </edge>
+    <edge source="n3" target="n27">
+    </edge>
+    <edge source="n4" target="n0">
+    </edge>
+    <edge source="n4" target="n1">
+    </edge>
+    <edge source="n4" target="n5">
+    </edge>
+    <edge source="n4" target="n17">
+    </edge>
+    <edge source="n4" target="n25">
+    </edge>
+    <edge source="n5" target="n0">
+    </edge>
+    <edge source="n5" target="n4">
+    </edge>
+    <edge source="n5" target="n17">
+    </edge>
+    <edge source="n5" target="n25">
+    </edge>
+    <edge source="n6" target="n3">
+    </edge>
+    <edge source="n6" target="n12">
+    </edge>
+    <edge source="n6" target="n13">
+    </edge>
+    <edge source="n6" target="n16">
+    </edge>
+    <edge source="n6" target="n20">
+    </edge>
+    <edge source="n6" target="n25">
+    </edge>
+    <edge source="n6" target="n27">
+    </edge>
+    <edge source="n7" target="n2">
+    </edge>
+    <edge source="n7" target="n8">
+    </edge>
+    <edge source="n7" target="n9">
+    </edge>
+    <edge source="n7" target="n11">
+    </edge>
+    <edge source="n7" target="n14">
+    </edge>
+    <edge source="n7" target="n15">
+    </edge>
+    <edge source="n7" target="n24">
+    </edge>
+    <edge source="n8" target="n2">
+    </edge>
+    <edge source="n8" target="n7">
+    </edge>
+    <edge source="n8" target="n11">
+    </edge>
+    <edge source="n8" target="n15">
+    </edge>
+    <edge source="n8" target="n24">
+    </edge>
+    <edge source="n9" target="n7">
+    </edge>
+    <edge source="n9" target="n14">
+    </edge>
+    <edge source="n9" target="n21">
+    </edge>
+    <edge source="n10" target="n21">
+    </edge>
+    <edge source="n10" target="n22">
+    </edge>
+    <edge source="n10" target="n23">
+    </edge>
+    <edge source="n11" target="n2">
+    </edge>
+    <edge source="n11" target="n7">
+    </edge>
+    <edge source="n11" target="n8">
+    </edge>
+    <edge source="n11" target="n15">
+    </edge>
+    <edge source="n12" target="n3">
+    </edge>
+    <edge source="n12" target="n6">
+    </edge>
+    <edge source="n12" target="n13">
+    </edge>
+    <edge source="n12" target="n16">
+    </edge>
+    <edge source="n12" target="n19">
+    </edge>
+    <edge source="n12" target="n20">
+    </edge>
+    <edge source="n12" target="n24">
+    </edge>
+    <edge source="n12" target="n25">
+    </edge>
+    <edge source="n12" target="n26">
+    </edge>
+    <edge source="n12" target="n27">
+    </edge>
+    <edge source="n13" target="n3">
+    </edge>
+    <edge source="n13" target="n6">
+    </edge>
+    <edge source="n13" target="n12">
+    </edge>
+    <edge source="n13" target="n16">
+    </edge>
+    <edge source="n13" target="n19">
+    </edge>
+    <edge source="n13" target="n20">
+    </edge>
+    <edge source="n13" target="n24">
+    </edge>
+    <edge source="n13" target="n25">
+    </edge>
+    <edge source="n13" target="n26">
+    </edge>
+    <edge source="n13" target="n27">
+    </edge>
+    <edge source="n14" target="n7">
+    </edge>
+    <edge source="n14" target="n9">
+    </edge>
+    <edge source="n14" target="n21">
+    </edge>
+    <edge source="n15" target="n2">
+    </edge>
+    <edge source="n15" target="n7">
+    </edge>
+    <edge source="n15" target="n8">
+    </edge>
+    <edge source="n15" target="n11">
+    </edge>
+    <edge source="n15" target="n24">
+    </edge>
+    <edge source="n16" target="n0">
+    </edge>
+    <edge source="n16" target="n1">
+    </edge>
+    <edge source="n16" target="n3">
+    </edge>
+    <edge source="n16" target="n4">
+    </edge>
+    <edge source="n16" target="n5">
+    </edge>
+    <edge source="n16" target="n6">
+    </edge>
+    <edge source="n16" target="n12">
+    </edge>
+    <edge source="n16" target="n13">
+    </edge>
+    <edge source="n16" target="n17">
+    </edge>
+    <edge source="n16" target="n19">
+    </edge>
+    <edge source="n16" target="n20">
+    </edge>
+    <edge source="n16" target="n25">
+    </edge>
+    <edge source="n16" target="n26">
+    </edge>
+    <edge source="n16" target="n27">
+    </edge>
+    <edge source="n17" target="n0">
+    </edge>
+    <edge source="n17" target="n1">
+    </edge>
+    <edge source="n17" target="n4">
+    </edge>
+    <edge source="n17" target="n5">
+    </edge>
+    <edge source="n17" target="n6">
+    </edge>
+    <edge source="n17" target="n12">
+    </edge>
+    <edge source="n17" target="n16">
+    </edge>
+    <edge source="n17" target="n19">
+    </edge>
+    <edge source="n17" target="n25">
+    </edge>
+    <edge source="n18" target="n7">
+    </edge>
+    <edge source="n18" target="n9">
+    </edge>
+    <edge source="n18" target="n10">
+    </edge>
+    <edge source="n18" target="n14">
+    </edge>
+    <edge source="n18" target="n21">
+    </edge>
+    <edge source="n18" target="n22">
+    </edge>
+    <edge source="n18" target="n23">
+    </edge>
+    <edge source="n19" target="n4">
+    </edge>
+    <edge source="n19" target="n12">
+    </edge>
+    <edge source="n19" target="n13">
+    </edge>
+    <edge source="n19" target="n16">
+    </edge>
+    <edge source="n19" target="n17">
+    </edge>
+    <edge source="n19" target="n20">
+    </edge>
+    <edge source="n19" target="n26">
+    </edge>
+    <edge source="n20" target="n5">
+    </edge>
+    <edge source="n20" target="n6">
+    </edge>
+    <edge source="n20" target="n12">
+    </edge>
+    <edge source="n20" target="n13">
+    </edge>
+    <edge source="n20" target="n16">
+    </edge>
+    <edge source="n20" target="n17">
+    </edge>
+    <edge source="n20" target="n19">
+    </edge>
+    <edge source="n20" target="n25">
+    </edge>
+    <edge source="n20" target="n26">
+    </edge>
+    <edge source="n21" target="n7">
+    </edge>
+    <edge source="n21" target="n9">
+    </edge>
+    <edge source="n21" target="n10">
+    </edge>
+    <edge source="n21" target="n14">
+    </edge>
+    <edge source="n21" target="n18">
+    </edge>
+    <edge source="n21" target="n22">
+    </edge>
+    <edge source="n21" target="n23">
+    </edge>
+    <edge source="n22" target="n23">
+    </edge>
+    <edge source="n23" target="n22">
+    </edge>
+    <edge source="n24" target="n2">
+    </edge>
+    <edge source="n24" target="n12">
+    </edge>
+    <edge source="n24" target="n13">
+    </edge>
+    <edge source="n24" target="n15">
+    </edge>
+    <edge source="n24" target="n19">
+    </edge>
+    <edge source="n24" target="n27">
+    </edge>
+    <edge source="n25" target="n0">
+    </edge>
+    <edge source="n25" target="n3">
+    </edge>
+    <edge source="n25" target="n4">
+    </edge>
+    <edge source="n25" target="n5">
+    </edge>
+    <edge source="n25" target="n6">
+    </edge>
+    <edge source="n25" target="n12">
+    </edge>
+    <edge source="n25" target="n13">
+    </edge>
+    <edge source="n25" target="n16">
+    </edge>
+    <edge source="n25" target="n17">
+    </edge>
+    <edge source="n25" target="n20">
+    </edge>
+    <edge source="n25" target="n27">
+    </edge>
+  </graph>
+</graphml>

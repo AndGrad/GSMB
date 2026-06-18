@@ -1,11 +1,22 @@
+###------------------------------------------------------------------------
+###------------------------------------------------------------------------
+###                                                                     ---
+###                            MAKE FIGURE 3                            ---
+###                                                                     ---
+###------------------------------------------------------------------------
+###------------------------------------------------------------------------
+
+## Data import and wrangling
+source("scripts/functions/check_pkgs.R") # when rendering
+
 ## load data
 base::load("data_simulations//sim_result_3000_1_infector_4treatments.rda")
 
 
 ## create data frame from list
 df_sims <- bind_rows(simulations_data_list, .id = "column_label") %>% 
-  filter(!if_any(everything(), is.na))  %>% 
-  filter(classNr != 103 & classNr!=105) %>% ## remove classes with separate components where diffusion cannot happen
+  dplyr::filter(!if_any(everything(), is.na))  %>% 
+  dplyr::filter(classNr != 103 & classNr!=105) %>% ## remove classes with separate components where diffusion cannot happen
   group_by(classNr) %>% ## group by class to separate network size
   mutate(fixp = 1/net_size, ## theoretical fixation probabily, 1/N
          fixt = 4*net_size) %>% ## theoretical fixation time, 4N
@@ -38,7 +49,7 @@ results <- df_sims %>%
 
 ## select network that reached fixation of trait B
 fixated_B <- results %>% 
-  filter(iter < 10000 & result == 1) 
+  dplyr::filter(iter < 10000 & result == 1) %>% 
 ungroup()
 
 
