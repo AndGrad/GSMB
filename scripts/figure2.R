@@ -42,7 +42,7 @@ A <-
   #geom_rect(aes(xmin=3.5,xmax=6.5,ymin=-Inf,ymax=Inf),alpha=0.05,fill="#377EB8",size=0) + 
   geom_bar(color = 'black', fill = 'lightgray') +
   geom_text(
-    aes(label = ..count..),
+    aes(label = after_stat(count)),
     stat = "count",
     #   position = position_dodge2(preserve = "single", width = 1),
     vjust = -0.5,

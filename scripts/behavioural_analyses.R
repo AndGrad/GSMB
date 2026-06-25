@@ -100,7 +100,7 @@ if (file.exists('modelfits/follow_model_all_data_pre_reg.RData')){
     prior(normal(0, 0.5), class = "b", coef = "social_info_factor1:age_scaled")
   )
   
-  fit_prior <- brm(
+  follow_model_all_data_pre_reg_prior <- brm(
     follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled +  (1|classNr/IDself), ## more complex random effect structure: (1 + social_info_factor| classNr/IDself) + (1 | IDother),
     data         = all_data_treatment,
     family       = bernoulli(link = "logit"),
@@ -112,18 +112,18 @@ if (file.exists('modelfits/follow_model_all_data_pre_reg.RData')){
     seed =18
   )
   
-  pp_check(fit_prior, ndraws = 1000)
+  pp_check(follow_model_all_data_pre_reg_prior, ndraws = 1000)
   
   ## otherwise run the model
   follow_model_all_data_pre_reg <-
     brm(
-      follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled +  (1|classNr/IDself),  ## more complex random effect structure: (1 + social_info_factor| classNr/IDself) + (1 | IDother),
+      follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled +   (1|classNr/IDself),  ## more complex random effect structure: (1 + social_info_factor| classNr/IDself) + (1 | IDother),
       prior = priors_1,
       data = all_data_treatment,
       bernoulli(link = "logit"),
       cores = 4,
       chains = 4,
-      iter = 3000,
+      iter = 4000,
       seed = 18,
       control = list(adapt_delta = 0.95)
     )
@@ -131,6 +131,8 @@ if (file.exists('modelfits/follow_model_all_data_pre_reg.RData')){
   conditional_effects(follow_model_all_data_pre_reg)
   
   save("follow_model_all_data_pre_reg", file = 'modelfits/follow_model_all_data_pre_reg.RData')
+  save("follow_model_all_data_pre_reg_prior", file = 'modelfits/follow_model_all_data_pre_reg_prior.RData')
+  
 }
 
 ## make a table with results
@@ -154,6 +156,20 @@ if (file.exists('modelfits/follow_model_no2019_pre_reg.RData')){
   data_model_no2019 <- all_data_treatment %>% 
     filter(wave != "2019")
   
+  follow_model_no2019_prior <- brm(
+    follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled +  (1|classNr/IDself), ## more complex random effect structure: (1 + social_info_factor| classNr/IDself) + (1 | IDother),
+    data         = data_model_no2019,
+    family       = bernoulli(link = "logit"),
+    prior        = priors_1,
+    sample_prior = "only",
+    cores = 4,
+    chains = 4,
+    iter = 4000,
+    seed =18
+  )
+  
+  pp_check(follow_model_no2019_prior, ndraws = 1000)
+  
   
   ## pre-registered regression, without Study 1
   follow_model_no2019 <-
@@ -164,12 +180,13 @@ if (file.exists('modelfits/follow_model_no2019_pre_reg.RData')){
       bernoulli(link = "logit"),
       cores = 4,
       chains = 4,
-      iter = 3000,
+      iter = 4000,
       seed = 99,
       control = list(adapt_delta = 0.99)
     )
   
   save("follow_model_no2019", file = 'modelfits/follow_model_no2019_pre_reg.RData')
+  save("follow_model_no2019_prior", file = 'modelfits/follow_model_no2019_pre_reg_prior.RData')
   
 }
 
@@ -201,7 +218,7 @@ priors_2 <- c(
   
 )
 
-fit_prior <- brm(
+follow_model_all_data_pre_reg_robustness_check_prior <- brm(
   follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled  + stdinDegreepeer * peerisfriend +  (1|classNr/IDself),  ## more complex random effect structure: (1 + social_info_factor| classNr/IDself) + (1 | IDother)
   data         = all_data_treatment,
   family       = bernoulli(link = "logit"),
@@ -214,17 +231,17 @@ fit_prior <- brm(
   control = list(adapt_delta = 0.95)
 )
 
-pp_check(fit_prior, ndraws = 100)
+pp_check(follow_model_all_data_pre_reg_robustness_check_prior, ndraws = 100)
 
 follow_model_all_data_pre_reg_robustness_check <-
   brm( 
     follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled  + stdinDegreepeer * peerisfriend +  (1|classNr/IDself),  ## more complex random effect structure: (1 + social_info_factor| classNr/IDself) + (1 | IDother)
-    prior = priors,
+    prior = priors_2,
     data = all_data_treatment,
     bernoulli(link = "logit"),
     cores = 4,
     chains = 4,
-    iter = 3000,
+    iter = 4000,
     seed = 99,
     control = list(adapt_delta = 0.95)
   )
@@ -235,8 +252,29 @@ conditional_effects(follow_model_all_data_pre_reg_robustness_check)
 plot_model(follow_model_all_data_pre_reg_robustness_check)
 
 save("follow_model_all_data_pre_reg_robustness_check", file = 'modelfits/follow_model_all_data_pre_reg_robustness_check.RData')
+save("follow_model_all_data_pre_reg_robustness_check_prior", file = 'modelfits/follow_model_all_data_pre_reg_robustness_check_prior.RData')
+
 
 }
+
+
+
+#### robustness check gender
+
+model_gender <- 
+brm(
+  follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled + factor(gender_diff) +  (1|classNr/IDself),  ## more complex random effect structure: (1 + social_info_factor| classNr/IDself) + (1 | IDother),
+  #prior = priors_1,
+  data = all_data_treatment,
+  bernoulli(link = "logit"),
+  cores = 4,
+  chains = 4,
+  iter = 4000,
+  seed = 18,
+  control = list(adapt_delta = 0.95)
+)
+
+
 
 ###------------ analysis of Study 2 part 2 ------------------------------------
 
