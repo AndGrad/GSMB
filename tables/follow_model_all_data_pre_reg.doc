@@ -10,18 +10,18 @@
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Intercept</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">1.04</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.91&nbsp;&ndash;&nbsp;1.19</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">1.08</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.95&nbsp;&ndash;&nbsp;1.22</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Social Information [Donate]</td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">1.08</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.95&nbsp;&ndash;&nbsp;1.24</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.95&nbsp;&ndash;&nbsp;1.23</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Age</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.89</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.83&nbsp;&ndash;&nbsp;0.96</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">1.02</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">0.96&nbsp;&ndash;&nbsp;1.09</td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Peer In-degree</td>

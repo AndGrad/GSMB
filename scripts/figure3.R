@@ -112,12 +112,13 @@ panel_C <-
     position = position_dodge(width = 0.75),
     vjust = -0.5,
     # hjust = 2,
-    color = "red"
+    color = "red",
+    size = 5
   ) +
-  geom_text(x = 2.5, y = 1, label = "benchmark", color = "blue", size = 4, hjust = 1.2, vjust = -0.2) +
+  geom_text(x = 2.5, y = 1, label = "benchmark", color = "blue", size = 5, hjust = 1.2, vjust = -0.2) +
   geom_hline(aes(yintercept = 1), color = 'blue') +
-  theme_tidybayes() +
-  theme(text = element_text(size = 18)) +
+  theme_classic() +
+  theme(text = element_text(size = 24)) +
   labs(y = 'N of succesful interventions', 
        x = '"Influencer" status') +
   guides(shape = 'none') 
@@ -189,8 +190,8 @@ ggplot(data = panel_D_data, aes(x = status, y = meanT)) +
     color = "red"
   ) +
   geom_hline(aes(yintercept = 1), color = 'blue') +
-  theme_tidybayes() +
-  theme(text = element_text(size = 18)) +
+  theme_classic() +
+  theme(text = element_text(size = 26)) +
   labs(x = '"Influencer" status', 
        y = 'Intervention duration') +
   guides(shape = 'none')
@@ -202,8 +203,7 @@ panel_D
 ## panles
 figure3 <- cowplot::plot_grid(NULL, NULL , panel_C,
                               nrow =  1,
-                              labels = c("A", "B", "C"), label_size = 16
-)
+                              labels = c("A", "B", "C"), label_size = 24)
 
 ## 4 panels
 # figure3 <- cowplot::plot_grid(NULL, NULL , panel_C, panel_D,
@@ -213,4 +213,4 @@ figure3 <- cowplot::plot_grid(NULL, NULL , panel_C,
 # )
 
 figure3
-ggsave(plot = figure3, 'plots/figure3_3panels.png', width = 18, height = 6)
+ggsave(plot = figure3, 'plots/figure3_3panels.png', width = 20, height = 8)

@@ -97,11 +97,11 @@ B <-
   ) +
   scale_x_discrete(breaks = NULL) +
   facet_wrap2(~social_info_factor,  strip.position = "bottom", strip = strip) +
-  theme_bw() +
+  theme_classic() +
   theme(
     text = element_text(size = 15),
     axis.text.x = element_blank(),
-    axis.ticks = element_blank(),
+    #axis.ticks = element_blank(),
     strip.placement = "outside",
     legend.position=c(.8,.85),
     legend.box.background = (element_rect(colour = 'black', fill = "white", linetype='solid')),
@@ -171,7 +171,7 @@ D <- df_deg %>%
             position = position_dodge(0.05),
             aes(color = 'orange', linetype = "1")) +
   labs(y = 'p(Conformity)', x = 'Influencer in-degree [std]') +
-  theme_tidybayes() +
+  theme_classic() +
   theme(text = element_text(size = 15)) +
   guides(color = 'none', linetype = 'none') +
   ylim(0, 1)
@@ -188,7 +188,7 @@ E <- df_age %>%
   scale_x_continuous(breaks = 11:19) +
   labs(x = 'Age',
        y = 'p(Conformity)') +
-  theme_tidybayes() +
+  theme_classic() +
   theme(text = element_text(size = 15)) +
   guides(color = 'none', linetype = 'none') +
   ylim(0, 1)
@@ -203,7 +203,7 @@ F <- df_oppconf %>%
             position = position_dodge(0.05),
             aes(color = social_info_factor, linetype = "1")) +
   labs(y = 'p(Conformity)', x = 'Age') +
-  theme_tidybayes() +
+  theme_classic() +
   theme(text = element_text(size = 15)) +
   guides(#color = 'none', 
          linetype = 'none',
@@ -231,7 +231,8 @@ figure2 <- cowplot::plot_grid(B, A, C, D, E , F,
                             labels = c("A", "B", "C", "D", "E", "F", "E" ), label_size = 16
 )
 
-figure2
+figure2 
 
 ## save figure
 ggsave(figure2, filename = "plots/figure2.png", height = 8, width = 14)
+

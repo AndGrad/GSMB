@@ -76,8 +76,6 @@ lollipop <-
 ggsave(lollipop, filename = "plots/lollipop.png", width = 10)
 
 
-###--------------------- Preregistered regression ------------------------------
-
 ## load results if the model has already been run
 
 if (file.exists('modelfits/follow_model_all_data_pre_reg.RData')){
@@ -129,6 +127,7 @@ if (file.exists('modelfits/follow_model_all_data_pre_reg.RData')){
     )
   
   conditional_effects(follow_model_all_data_pre_reg)
+  
   
   save("follow_model_all_data_pre_reg", file = 'modelfits/follow_model_all_data_pre_reg.RData')
   save("follow_model_all_data_pre_reg_prior", file = 'modelfits/follow_model_all_data_pre_reg_prior.RData')
@@ -189,6 +188,8 @@ if (file.exists('modelfits/follow_model_no2019_pre_reg.RData')){
   save("follow_model_no2019_prior", file = 'modelfits/follow_model_no2019_pre_reg_prior.RData')
   
 }
+
+conditional_effects(follow_model_no2019)
 
 ## make a table
 tab_model(follow_model_no2019)
@@ -254,25 +255,66 @@ plot_model(follow_model_all_data_pre_reg_robustness_check)
 save("follow_model_all_data_pre_reg_robustness_check", file = 'modelfits/follow_model_all_data_pre_reg_robustness_check.RData')
 save("follow_model_all_data_pre_reg_robustness_check_prior", file = 'modelfits/follow_model_all_data_pre_reg_robustness_check_prior.RData')
 
-
 }
 
 
 
 #### robustness check gender
+#### robustness check gender
 
-model_gender <- 
-brm(
-  follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled + factor(gender_diff) +  (1|classNr/IDself),  ## more complex random effect structure: (1 + social_info_factor| classNr/IDself) + (1 | IDother),
-  #prior = priors_1,
-  data = all_data_treatment,
-  bernoulli(link = "logit"),
-  cores = 4,
-  chains = 4,
-  iter = 4000,
-  seed = 18,
-  control = list(adapt_delta = 0.95)
-)
+if (file.exists('modelfits/model_gender.RData')){
+  
+  base::load('modelfits/model_gender.RData')
+  
+} else {
+  
+  model_gender <- 
+    brm(
+      follow ~  social_info_factor *  age_scaled +  stdinDegreepeer * age_scaled + factor(gender_diff) +  (1|classNr/IDself),  ## more complex random effect structure: (1 + social_info_factor| classNr/IDself) + (1 | IDother),
+      #prior = priors_1,
+      data = all_data_treatment,
+      bernoulli(link = "logit"),
+      cores = 4,
+      chains = 4,
+      iter = 4000,
+      seed = 18,
+      control = list(adapt_delta = 0.95)
+    )
+  
+  save("model_gender", file = 'modelfits/model_gender.RData')
+  
+}
+
+## make a table
+tab_model(model_gender)
+
+#### robustness effect age
+
+if (file.exists('modelfits/model_age.RData')){
+  
+  base::load('modelfits/model_age.RData')
+  
+} else {
+  
+  model_age <- 
+    brm(
+      follow ~  age_scaled +  social_info_factor +  (1|classNr/IDself),
+      #prior = priors_1,
+      data = all_data_treatment,
+      bernoulli(link = "logit"),
+      cores = 4,
+      chains = 4,
+      iter = 4000,
+      seed = 18,
+      control = list(adapt_delta = 0.98)
+    )
+  
+  save("model_age", file = 'modelfits/model_age.RData')
+  
+}
+
+## make a table
+tab_model(model_age)
 
 
 
