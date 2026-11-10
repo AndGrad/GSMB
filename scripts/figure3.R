@@ -120,7 +120,7 @@ panel_C <-
   theme_classic() +
   theme(text = element_text(size = 24)) +
   labs(y = 'N of succesful interventions', 
-       x = '"Influencer" status') +
+       x = 'Seed connectedness') +
   guides(shape = 'none') 
   #facet_wrap( ~ treatment, nrow = 1)
 
@@ -213,4 +213,4 @@ figure3 <- cowplot::plot_grid(NULL, NULL , panel_C,
 # )
 
 figure3
-ggsave(plot = figure3, 'plots/figure3_3panels.png', width = 20, height = 8)
+ggsave(plot = figure3, 'plots/figure3_3panels.png', width = 18, height = 6)

@@ -18,7 +18,7 @@ all_data_treatment %>%
   labs(x =
          "In-degree", y = "Count") +
   theme(text = element_text(size = 20)) +
-  scale_fill_viridis_d(option = "D", name = 'Peer status', labels = c('High', 'Low')) 
+  scale_fill_viridis_d(option = "D", name = 'Peer connectedness', labels = c('High', 'Low')) 
 
 ggsave("plots/treatment_separation.png", height = 4)
 

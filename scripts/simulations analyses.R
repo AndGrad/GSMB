@@ -92,9 +92,9 @@ results %>%
 
 panel_labels <- c(
   `no_structure_no_status` = "Simulated benchmark",
-  `no_structure_status` = "Status bias",
+  `no_structure_status` = "Centrality bias",
   `structure_no_status` = "Network structure",
-  `structure_status` = "Network structure\nand status bias"
+  `structure_status` = "Network structure\nand Centrality bias"
 )
 
 ###---------- Supplement figure: intervention success across treatments---------
@@ -150,7 +150,7 @@ ggplot(data = plot_fixation_proporion_dataset, aes(x = status, y = S)) +
   theme_tidybayes() +
   theme(text = element_text(size = 18)) +
   labs(y = 'Succesful interventions relative to benchmark (S)', 
-       x = '"Influencer" status') +
+       x = 'Seed Centrality') +
   guides(shape = 'none') +
   facet_wrap( ~ treatment, nrow = 1, labeller = as_labeller(panel_labels))
 
@@ -211,7 +211,7 @@ ggplot(data = plot_fixation_time_dataset, aes(x = status, y = meanT)) +
   geom_hline(aes(yintercept = 1), color = 'blue') +
   theme_tidybayes() +
   theme(text = element_text(size = 18)) +
-  labs(x = '"Influencer" status', 
+  labs(x = 'Seed Centrality', 
        y = 'Intervention duration relative to benchmark (T)') +
   guides(shape = 'none') +
   facet_wrap( ~ treatment, nrow=1, labeller = as_labeller(panel_labels))
@@ -237,7 +237,7 @@ results %>%
             perc_B = mean(perc_B)*100)
 
 ## summary of fixation time
-results %>% 
+results %>%  
   filter(result == 1) %>% 
   select(iter, treatment, status, classNr, T_conditional, benchmark_t_sims_conditional) %>% 
   group_by(treatment, status) %>% 
@@ -245,3 +245,4 @@ results %>%
             meanT = mean(T_conditional), 
             benchmark_t_sims_conditional = mean(benchmark_t_sims_conditional)) %>% 
   mutate(mean_t_bench = mean(benchmark_t_sims_conditional))
+
