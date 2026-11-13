@@ -83,8 +83,6 @@ results <- contrast_logodds |>
 print(results)
 
 # ---- 6. Crossover age (where the two conformity rates are equal) ---------
-# Defined only when the interaction is non-zero; with pd = 1.00 for the
-# interaction this is not an issue, but extreme draws are trimmed by the quantiles.
 crossover <- draws |>
   mutate(age_cross = -b_soc / b_int + age_mean) |>
   summarise(est = median(age_cross),

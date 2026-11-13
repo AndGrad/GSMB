@@ -2,6 +2,8 @@
 ##                     Analyze simulations                     ##
 #################################################################
 
+source("scripts/functions/check_pkgs.R") # when rendering
+
 ## load data
 base::load("data_simulations/sim_result_3000_1_infector_4treatments.rda")
 
