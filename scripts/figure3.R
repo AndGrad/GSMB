@@ -9,56 +9,60 @@
 ## Data import and wrangling
 source("scripts/functions/check_pkgs.R") # when rendering
 
+## Colors for seed centrality, shared with Figure 1B and Figure 2
+## (viridis option "D" with two levels: yellow = high, purple = low)
+centrality_colors <- c(High = "#FDE725", Low = "#440154")
+
 ## load data
-base::load("data_simulations//sim_result_3000_1_infector_4treatments.rda")
+base::load("data_simulations/sim_result_3000_1_infector_4treatments.rda")
 
 
 ## create data frame from list
-df_sims <- bind_rows(simulations_data_list, .id = "column_label") %>% 
-  dplyr::filter(!if_any(everything(), is.na))  %>% 
-  dplyr::filter(classNr != 103 & classNr!=105) %>% ## remove classes with separate components where diffusion cannot happen
+df_sims <- bind_rows(simulations_data_list, .id = "column_label") %>%
+  dplyr::filter(!if_any(everything(), is.na))  %>%
+  dplyr::filter(classNr != 103 & classNr != 105) %>% ## remove classes with separate components where diffusion cannot happen
   group_by(classNr) %>% ## group by class to separate network size
-  mutate(fixp = 1/net_size, ## theoretical fixation probabily, 1/N
+  mutate(fixp = 1/net_size, ## theoretical fixation probability, 1/N
          fixt = 4*net_size) %>% ## theoretical fixation time, 4N
-  ungroup()  
+  ungroup()
 
-benchmark_t <- df_sims %>% 
-  group_by(classNr) %>% 
-  select(iter, classNr, treatment) %>% 
-  filter(treatment == "no_structure_no_status")  %>% 
-  summarise(benchmark_t_sims = mean(iter)) 
+benchmark_t <- df_sims %>%
+  group_by(classNr) %>%
+  select(iter, classNr, treatment) %>%
+  filter(treatment == "no_structure_no_status")  %>%
+  summarise(benchmark_t_sims = mean(iter))
 
-benchmark_t_conditional <- df_sims %>% 
-  group_by(classNr) %>% 
-  select(iter, classNr, treatment, result) %>% 
-  filter(treatment == "no_structure_no_status" & result == 1)  %>% 
-  summarise(benchmark_t_sims_conditional = mean(iter)) 
+benchmark_t_conditional <- df_sims %>%
+  group_by(classNr) %>%
+  select(iter, classNr, treatment, result) %>%
+  filter(treatment == "no_structure_no_status" & result == 1)  %>%
+  summarise(benchmark_t_sims_conditional = mean(iter))
 
 df_sims <- left_join(df_sims, benchmark_t, by = "classNr")
 df_sims <- left_join(df_sims, benchmark_t_conditional, by = "classNr")
 
 ## create outcome variables
-results <- df_sims %>% 
-  group_by(treatment, status, classNr) %>% 
+results <- df_sims %>%
+  group_by(treatment, status, classNr) %>%
   mutate(tot_B = sum(result), ## total fixations on B
          tot_A = (n_runs[1]/2) - tot_B,
          perc_B = tot_B/(n_runs[1]/2), ## %success
          S = perc_B/fixp,
          T = iter/benchmark_t_sims,
-         T_conditional = iter/benchmark_t_sims_conditional) 
+         T_conditional = iter/benchmark_t_sims_conditional)
 
 ## select network that reached fixation of trait B
-fixated_B <- results %>% 
-  dplyr::filter(iter < 10000 & result == 1) %>% 
-ungroup()
+fixated_B <- results %>%
+  dplyr::filter(iter < 10000 & result == 1) %>%
+  ungroup()
 
 
 ## panel C: fixation rates
 
-panel_C_data <- 
+panel_C_data <-
   fixated_B %>%
-  filter(treatment == "structure_status") %>% 
-  group_by(classNr) %>% 
+  filter(treatment == "structure_status") %>%
+  group_by(classNr) %>%
   mutate(side = ifelse(status == "High", -1, 1)) %>%
   group_by(status, treatment, classNr) %>%
   reframe(
@@ -66,16 +70,18 @@ panel_C_data <-
     net_size = net_size,
     classNr = as.character(classNr),
   ) %>%
-  distinct() 
+  distinct()
 
 
 ## make plot
 
-panel_C <- 
+panel_C <-
   ggplot(data = panel_C_data, aes(x = status, y = S)) +
-  geom_hline(aes(yintercept = 1), color = 'blue') +
+  geom_hline(aes(yintercept = 1), color = 'darkgrey') +
   geom_half_boxplot(
     data = panel_C_data[which(panel_C_data$status == "High"), ],
+    fill = centrality_colors["High"],
+    alpha = .7,
     nudge = .1,
     width = .6,
     outlier.shape = NA,
@@ -83,6 +89,8 @@ panel_C <-
   ) +
   geom_half_boxplot(
     data = panel_C_data[which(panel_C_data$status == "Low"), ],
+    fill = centrality_colors["Low"],
+    alpha = .7,
     side = "r",
     nudge = .1,
     width = .6,
@@ -103,6 +111,8 @@ panel_C <-
                stroke = 2,
                position = position_nudge(x = .1)) +
   geom_line(aes(group = classNr), color = 'grey' ) +
+  ## NOTE: labels are hard-coded; by the legend's definition class 114 is also
+  ## a non-converged network (see audit, finding T1S-06). Not changed here.
   geom_text(
     aes(label = ifelse(
       classNr %in% c("116", "106", "123", ""),
@@ -111,44 +121,42 @@ panel_C <-
     )),
     position = position_dodge(width = 0.75),
     vjust = -0.5,
-    # hjust = 2,
     color = "red",
     size = 5
   ) +
-  geom_text(x = 2.5, y = 1, label = "benchmark", color = "blue", size = 5, hjust = 1.2, vjust = -0.2) +
-  geom_hline(aes(yintercept = 1), color = 'blue') +
+  geom_text(x = 2.5, y = 1, label = "benchmark", color = "darkgrey", size = 5, hjust = 1.2, vjust = -0.2) +
+  geom_hline(aes(yintercept = 1), color = 'darkgrey') +
   theme_classic() +
   theme(text = element_text(size = 24)) +
-  labs(y = 'N of succesful interventions', 
-       x = 'Seed connectedness') +
-  guides(shape = 'none') 
-  #facet_wrap( ~ treatment, nrow = 1)
+  labs(y = 'Success relative to benchmark (S)',
+       x = 'Seed centrality') +
+  guides(shape = 'none')
 
 panel_C
 
 
-
-
-## panel D: fixation times
+## panel D: fixation times (not used in the 3-panel figure)
 
 ## dataset with means
 panel_D_data <-
   fixated_B %>%
-  filter(treatment == "structure_status") %>% 
-  group_by(classNr, status) %>% 
+  filter(treatment == "structure_status") %>%
+  group_by(classNr, status) %>%
   mutate(side = ifelse(status == "High", -1, 1)) %>%
   select(
     T_conditional,
   ) %>%
-  summarise(meanT = mean(T_conditional)) %>% 
-distinct() 
+  summarise(meanT = mean(T_conditional)) %>%
+  distinct()
 
-panel_D <- 
-ggplot(data = panel_D_data, aes(x = status, y = meanT)) +
-  geom_hline(aes(yintercept = 1), color = 'blue') +
-  geom_text(x = 2.5, y = 1, label = "benchmark", color = "blue", size = 4, hjust = .7, vjust = -0.2) +
+panel_D <-
+  ggplot(data = panel_D_data, aes(x = status, y = meanT)) +
+  geom_hline(aes(yintercept = 1), color = 'darkgrey') +
+  geom_text(x = 2.5, y = 1, label = "benchmark", color = "darkgrey", size = 4, hjust = .7, vjust = -0.2) +
   geom_half_boxplot(
     data = panel_D_data[which(panel_D_data$status == "High"), ],
+    fill = centrality_colors["High"],
+    alpha = .7,
     nudge = .1,
     width = .6,
     outlier.shape = NA,
@@ -156,6 +164,8 @@ ggplot(data = panel_D_data, aes(x = status, y = meanT)) +
   ) +
   geom_half_boxplot(
     data = panel_D_data[which(panel_D_data$status == "Low"), ],
+    fill = centrality_colors["Low"],
+    alpha = .7,
     side = "r",
     nudge = .1,
     width = .6,
@@ -186,13 +196,12 @@ ggplot(data = panel_D_data, aes(x = status, y = meanT)) +
     )),
     position = position_dodge(width = 0.75),
     vjust = -0.5,
-    # hjust = 2,
     color = "red"
   ) +
-  geom_hline(aes(yintercept = 1), color = 'blue') +
+  geom_hline(aes(yintercept = 1), color = 'darkgrey') +
   theme_classic() +
   theme(text = element_text(size = 26)) +
-  labs(x = '"Influencer" status', 
+  labs(x = 'Seed centrality',
        y = 'Intervention duration') +
   guides(shape = 'none')
 
@@ -200,17 +209,9 @@ panel_D
 
 ## make figure
 
-## panles
 figure3 <- cowplot::plot_grid(NULL, NULL , panel_C,
                               nrow =  1,
                               labels = c("A", "B", "C"), label_size = 24)
 
-## 4 panels
-# figure3 <- cowplot::plot_grid(NULL, NULL , panel_C, panel_D,
-#                               nrow =  2,
-#                               ncol =  2,
-#                               labels = c("A", "B", "C", "D"), label_size = 16
-# )
-
 figure3
-ggsave(plot = figure3, 'plots/figure3_3panels.png', width = 18, height = 6)
+ggsave(plot = figure3, 'plots/figure3_3panels.png', width = 20, height = 7)

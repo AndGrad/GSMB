@@ -6,19 +6,22 @@
 source("scripts/load_environment.R")
 
 ## plot in-degree of the observed peers in the experimental conditions as they are defined in the experiment
+centrality_colors <- c(High = "#FDE725", Low = "#440154")   # same as Figures 1B, 2 and 3
+
 all_data_treatment %>% 
   filter(!is.na(status_social_info)) %>% 
-  ggplot( aes(x = stdinDegreepeer, fill = status_social_info)) +
-  
+  mutate(status_factor = factor(status_social_info,
+                                levels = c("H", "L"),
+                                labels = c("High", "Low"))) %>% 
+  ggplot(aes(x = stdinDegreepeer, fill = status_factor)) +
   geom_histogram(color = "black",
                  position = "dodge",
                  binwidth = .20) +
   theme_classic() +
   theme(legend.position = "top") +
-  labs(x =
-         "In-degree", y = "Count") +
+  labs(x = "In-degree", y = "Count") +
   theme(text = element_text(size = 20)) +
-  scale_fill_viridis_d(option = "D", name = 'Peer connectedness', labels = c('High', 'Low')) 
+  scale_fill_manual(values = centrality_colors, name = "Peer centrality")
 
 ggsave("plots/treatment_separation.png", height = 4)
 
